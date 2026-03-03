@@ -89,7 +89,7 @@ jobs:
     # 只上传 M68S sysupgrade 固件
     # -------------------------
     - name: Upload M68S firmware
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: env.UPLOAD_FIRMWARE_FOR_ARTIFACT == 'true'
       with:
         name: M68S_Firmware_${{ github.run_number }}
