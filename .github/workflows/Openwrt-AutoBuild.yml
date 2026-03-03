@@ -8,8 +8,13 @@
 
 name: Build OpenWrt
 
-on: 
-  repository_dispatch:
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: '选择编译目标设备'
+        required: true
+        default: 'rockchip_armv8'   # 默认 M68S target
 
 env:
   REPO_TOKEN: ${{ secrets.TOKEN_KIDDIN9 }}
@@ -30,8 +35,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ["${{ github.event.client_payload.target }}"]
-        
+        target: ["${{ github.event.inputs.target }}"]
+
     steps:
     - name: Checkout
       uses: actions/checkout@main
@@ -40,7 +45,7 @@ jobs:
 
     - name: Load Settings.ini
       run: |
-        echo ${{matrix.target}}
+        echo "Target: ${{matrix.target}}"
         source "${{ github.workspace }}/devices/common/settings.ini"
         if [ -f "devices/${{matrix.target}}/settings.ini" ]; then
           source "devices/${{matrix.target}}/settings.ini"
@@ -93,11 +98,11 @@ jobs:
         VERSION="$(echo "${{github.event.action}}" | grep -Eo " [0-9.]+" | sed -e 's/ //')" || true
         [ "$VERSION" ] && echo "VERSION=$VERSION" >> $GITHUB_ENV || echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
 
-    - name: Clone source code
+    - name: Ensure OpenWrt source
       run: |
-        set -x
-        # 省略 clone 细节，保持原逻辑
-        echo "Clone source code step"
+        if [ ! -d "openwrt" ]; then
+          git clone -b openwrt-25.12 https://github.com/openwrt/openwrt openwrt
+        fi
 
     - name: Load custom configuration
       run: |
@@ -129,8 +134,6 @@ jobs:
         name: ${{ env.VERSION }}_${{matrix.target}}_M68S
         path: |
           openwrt/bin/targets/rockchip/armv8/kwrt-rockchip-armv8-ezpro_mrkaio-m68s-squashfs-sysupgrade.img.gz
-          # 如果你以后需要 TF 启动镜像，可加：
-          # openwrt/bin/targets/rockchip/armv8/kwrt-rockchip-armv8-ezpro_mrkaio-m68s-ext4.img.gz
 
     # 保留原有部署和通知
     - name: Deploy imagebuilder to server
