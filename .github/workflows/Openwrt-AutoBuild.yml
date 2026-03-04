@@ -3,13 +3,17 @@
 # Description: Build OpenWrt using GitHub Actions
 # Lisence: MIT
 # Author: P3TERX
-# Blog: https://p3terx.com
 #=================================================
 
 name: Build OpenWrt
 
-on: 
-  repository_dispatch:
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Build Target (例如: rockchip_armv8)'
+        required: true
+        default: 'rockchip_armv8'
 
 env:
   REPO_TOKEN: ${{ secrets.TOKEN_KIDDIN9 }}
@@ -31,18 +35,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ["${{ github.event.client_payload.target }}"]
-        
+        target: ["${{ github.event.inputs.target }}"]
+
     steps:
     - name: Checkout
-      uses: actions/checkout@main
+      uses: actions/checkout@v4
       with:
           fetch-depth: 0
-
-    # - name: Set up secret file
-      # run: |
-        # echo ${{ secrets.TELEGRAM_CHAT_ID }} | sed 's/./& /g'
-        # echo ${{ secrets.TELEGRAM_TOKEN }} | sed 's/./& /g'
 
     - name: Load Settings.ini
       run: |
